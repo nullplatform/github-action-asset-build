@@ -1,0 +1,60 @@
+name: Asset Build
+description: This is a GitHub Action designed to automate the building of supported asset types on Nullplatform
+inputs:
+  command:
+    description: The command to be executed for building the assets
+    required: false
+    default: make
+  arguments:
+    description: Additional arguments to be passed along with the build command
+    required: false
+    default: build
+  options:
+    description: Additional options or flags to be used during the build process
+    required: false
+    default: ''
+  path:
+    description: The path to the source code that need to be built
+    required: false
+    default: .
+  output-path:
+    description: The path to the assets built
+    required: false
+    default: build
+  name:
+    description: The name of the asset or project being built
+    required: false
+    default: main
+runs:
+  using: composite
+  steps:
+    - name: Build asset
+      id: build-asset
+      shell: bash
+      env:
+        ASSET_WORKING_DIRECTORY: ${{ inputs.path }}
+        ASSET_OUTPUT_DIRECTORY: ${{ inputs.path }}/${{ inputs.output-path }}
+        ASSET_NAME: ${{ inputs.name }}
+      run: |
+        if [ "${{ inputs.command }}" != "make" ]; then
+          ${{ inputs.command }} \
+          ${{ inputs.arguments }} \
+          ${{ inputs.options }}
+        else
+          build_command="make"
+        
+          if [ "${{ inputs.arguments }}" != "build" ]; then
+            build_command="$build_command ${{ inputs.arguments }}"
+          else
+            build_command="$build_command build"
+          fi
+        
+          if [ -n "${{ inputs.options }}" ]; then
+            build_command="$build_command ${{ inputs.options }} "
+          fi
+        
+          eval $build_command \
+          ASSET_WORKING_DIRECTORY=$ASSET_WORKING_DIRECTORY \
+          ASSET_OUTPUT_DIRECTORY=$ASSET_OUTPUT_DIRECTORY \
+          ASSET_NAME=$ASSET_NAME
+        fi
