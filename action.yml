@@ -28,6 +28,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Checkout code
+      id: checkout-code
+      uses: actions/checkout@v3
     - name: Build asset
       id: build-asset
       shell: bash
@@ -41,7 +44,7 @@ runs:
           ${{ inputs.arguments }} \
           ${{ inputs.options }}
         else
-          build_command="make"
+          build_command="make -C ${{ inputs.path }}"
         
           if [ "${{ inputs.arguments }}" != "build" ]; then
             build_command="$build_command ${{ inputs.arguments }}"
@@ -57,4 +60,5 @@ runs:
           ASSET_WORKING_DIRECTORY=$ASSET_WORKING_DIRECTORY \
           ASSET_OUTPUT_DIRECTORY=$ASSET_OUTPUT_DIRECTORY \
           ASSET_NAME=$ASSET_NAME
+          ASSET_TARGET_URL=''
         fi
