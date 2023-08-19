@@ -13,12 +13,16 @@ inputs:
     description: Additional options or flags to be used during the build process
     required: false
     default: ''
-  path:
-    description: The path to the source code that need to be built
+  build-working-directory:
+    description: The directory where the build process will take place
     required: false
     default: .
-  output-path:
-    description: The path to the assets built
+  asset-working-directory:
+    description: The directory containing source code and assets for the build process
+    required: false
+    default: .
+  asset-output-directory:
+    description: The directory where built assets will be output
     required: false
     default: build
   name:
@@ -28,6 +32,29 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Sanitize Paths
+      id: sanitize-paths
+      shell: bash
+      run: |
+        # Sanitize function
+        sanitize_path() {
+          local path="$1"
+          # Remove "./" from the beginning of the path, but preserve "."
+          if [ "$path" != "./" ]; then
+            path="${path#./}"
+          fi
+          # Remove trailing slashes
+          path="${path%/}"
+          echo "$path"
+        }
+        # Sanitize paths
+        build_working_directory=$(sanitize_path "${{ inputs.build-working-directory }}")
+        asset_working_directory=$(sanitize_path "${{ inputs.asset-working-directory }}")
+        asset_output_directory=$(sanitize_path "${{ inputs.asset-output-directory }}")
+        # Export sanitized paths
+        echo "build-working-directory=$build_working_directory" >> "$GITHUB_OUTPUT"
+        echo "asset-working-directory=$asset_working_directory" >> "$GITHUB_OUTPUT"
+        echo "asset-output-directory=$asset_output_directory" >> "$GITHUB_OUTPUT"
     - name: Checkout code
       id: checkout-code
       uses: actions/checkout@v3
@@ -35,16 +62,18 @@ runs:
       id: build-asset
       shell: bash
       env:
-        ASSET_WORKING_DIRECTORY: ${{ inputs.path }}
-        ASSET_OUTPUT_DIRECTORY: ${{ inputs.path }}/${{ inputs.output-path }}
+        BUILD_WORKING_DIRECTORY: ${{ steps.sanitize-paths.outputs.build-working-directory }}
+        ASSET_WORKING_DIRECTORY: ${{ steps.sanitize-paths.outputs.asset-working-directory }}
+        ASSET_OUTPUT_DIRECTORY: ${{ steps.sanitize-paths.outputs.asset-working-directory }}/${{ steps.sanitize-paths.outputs.asset-output-directory }}
         ASSET_NAME: ${{ inputs.name }}
+        ASSET_TARGET_URL: ''
       run: |
         if [ "${{ inputs.command }}" != "make" ]; then
           ${{ inputs.command }} \
           ${{ inputs.arguments }} \
           ${{ inputs.options }}
         else
-          build_command="make -C ${{ inputs.path }}"
+          build_command="make -C ${{ steps.sanitize-paths.outputs.build-working-directory }}"
         
           if [ "${{ inputs.arguments }}" != "build" ]; then
             build_command="$build_command ${{ inputs.arguments }}"
@@ -57,6 +86,7 @@ runs:
           fi
         
           eval $build_command \
+          BUILD_WORKING_DIRECTORY=$BUILD_WORKING_DIRECTORY \
           ASSET_WORKING_DIRECTORY=$ASSET_WORKING_DIRECTORY \
           ASSET_OUTPUT_DIRECTORY=$ASSET_OUTPUT_DIRECTORY \
           ASSET_NAME=$ASSET_NAME
