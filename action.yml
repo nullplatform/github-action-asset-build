@@ -83,6 +83,10 @@ runs:
             else
               make_file_task="build-lambda"
             fi
+            # Override directories to work with default Makefile
+            BUILD_WORKING_DIRECTORY=$(realpath "$BUILD_WORKING_DIRECTORY")
+            ASSET_WORKING_DIRECTORY=$(realpath "$ASSET_WORKING_DIRECTORY")
+            ASSET_OUTPUT_DIRECTORY=$(realpath "$ASSET_OUTPUT_DIRECTORY")
           fi
         
           build_command="make -C $make_file_path"
