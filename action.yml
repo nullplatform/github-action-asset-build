@@ -73,12 +73,24 @@ runs:
           ${{ inputs.arguments }} \
           ${{ inputs.options }}
         else
-          build_command="make -C ${{ steps.sanitize-paths.outputs.build-working-directory }}"
+          make_file_path="${{ steps.sanitize-paths.outputs.build-working-directory }}"
+          make_file_task="build"
+          if [ ! -f "$make_file_path/makefile" ] && [ ! -f "$make_file_path/Makefile" ]; then
+            echo "Makefile not found in the '${{ steps.sanitize-paths.outputs.build-working-directory }}' folder. Using defaults."
+            make_file_path="${{ github.action_path }}"
+            if ls ${{ steps.sanitize-paths.outputs.asset-working-directory }}/Dockerfile* 1> /dev/null 2>&1; then
+              make_file_task="build-docker-file"
+            else
+              make_file_task="build-lambda"
+            fi
+          fi
+        
+          build_command="make -C $make_file_path"
         
           if [ "${{ inputs.arguments }}" != "build" ]; then
             build_command="$build_command ${{ inputs.arguments }}"
           else
-            build_command="$build_command build"
+            build_command="$build_command $make_file_task"
           fi
         
           if [ -n "${{ inputs.options }}" ]; then
