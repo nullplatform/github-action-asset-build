@@ -79,7 +79,7 @@ runs:
             echo "Makefile not found in the '${{ steps.sanitize-paths.outputs.build-working-directory }}' folder. Using defaults."
             make_file_path="${{ github.action_path }}"
             if ls ${{ steps.sanitize-paths.outputs.asset-working-directory }}/Dockerfile* 1> /dev/null 2>&1; then
-              make_file_task="build-docker-file"
+              make_file_task="build-docker-image"
             else
               make_file_task="build-lambda"
             fi
