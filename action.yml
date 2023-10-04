@@ -29,6 +29,10 @@ inputs:
     description: The name of the asset or project being built
     required: false
     default: main
+  type:
+    description: The type of asset to be build. One of docker-image, lambda, etc.
+    required: false
+    default: ''
 runs:
   using: composite
   steps:
@@ -66,6 +70,7 @@ runs:
         ASSET_WORKING_DIRECTORY: ${{ steps.sanitize-paths.outputs.asset-working-directory }}
         ASSET_OUTPUT_DIRECTORY: ${{ steps.sanitize-paths.outputs.asset-working-directory }}/${{ steps.sanitize-paths.outputs.asset-output-directory }}
         ASSET_NAME: ${{ inputs.name }}
+        ASSET_TYPE: ${{ inputs.type }}
         ASSET_TARGET_URL: ''
       run: |
         if [ "${{ inputs.command }}" != "make" ]; then
@@ -78,7 +83,9 @@ runs:
           if [ ! -f "$make_file_path/makefile" ] && [ ! -f "$make_file_path/Makefile" ]; then
             echo "Makefile not found in the '${{ steps.sanitize-paths.outputs.build-working-directory }}' folder. Using defaults."
             make_file_path="${{ github.action_path }}"
-            if ls ${{ steps.sanitize-paths.outputs.asset-working-directory }}/Dockerfile* 1> /dev/null 2>&1; then
+            if [ "${{ inputs.type }}" != "" ]; then
+              make_file_task="build-${{ inputs.type }}"
+            elif ls ${{ steps.sanitize-paths.outputs.asset-working-directory }}/Dockerfile* 1> /dev/null 2>&1; then
               make_file_task="build-docker-image"
             else
               make_file_task="build-lambda"
@@ -105,6 +112,7 @@ runs:
           BUILD_WORKING_DIRECTORY=$BUILD_WORKING_DIRECTORY \
           ASSET_WORKING_DIRECTORY=$ASSET_WORKING_DIRECTORY \
           ASSET_OUTPUT_DIRECTORY=$ASSET_OUTPUT_DIRECTORY \
-          ASSET_NAME=$ASSET_NAME
+          ASSET_NAME=$ASSET_NAME \
+          ASSET_TYPE=$ASSET_TYPE \
           ASSET_TARGET_URL=''
         fi
