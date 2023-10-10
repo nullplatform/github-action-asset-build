@@ -13,6 +13,10 @@ inputs:
     description: Additional options or flags to be used during the build process
     required: false
     default: ''
+  checkout-repository:
+    description: Checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it
+    required: false
+    default: true
   build-working-directory:
     description: The directory where the build process will take place
     required: false
@@ -59,9 +63,10 @@ runs:
         echo "build-working-directory=$build_working_directory" >> "$GITHUB_OUTPUT"
         echo "asset-working-directory=$asset_working_directory" >> "$GITHUB_OUTPUT"
         echo "asset-output-directory=$asset_output_directory" >> "$GITHUB_OUTPUT"
-    - name: Checkout code
+    - if: ${{ !inputs.checkout-repository || inputs.checkout-repository == 'true' }}
+      name: Checkout code
       id: checkout-code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Build asset
       id: build-asset
       shell: bash

@@ -44,6 +44,12 @@ The "Nullplatform Asset Build" GitHub Action automates the building of supported
 - **Required**: No
 - **Default**: `''`
 
+### `checkout-repository`
+
+- **Description**: Checks-out your repository under `$GITHUB_WORKSPACE`, so your workflow can access it.
+- **Required**: No
+- **Default**: `true`
+
 ### `build-working-directory`
 
 - **Description**: The directory where the build process will take place.
