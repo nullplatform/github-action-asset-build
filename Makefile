@@ -1,4 +1,4 @@
-.PHONY: push-docker-image push-lambda
+.PHONY: build-docker-image build-lambda
 
 build-docker-image:
 	docker build $(BUILD_ARGS) -t $(ASSET_NAME) -f $(ASSET_WORKING_DIRECTORY)/Dockerfile $(BUILD_WORKING_DIRECTORY)
