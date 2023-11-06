@@ -5,3 +5,4 @@ build-docker-image:
 
 build-lambda:
 	echo "Default build not supported for 'lambda' asset type yet"
+	exit 1
